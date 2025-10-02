@@ -78,6 +78,8 @@ document.querySelector('#btn-ejercicio-2')!
 
 function alCambiarTamanoPantalla() {
     renderer.setSize(window.innerWidth, window.innerHeight)
+    camara.aspect = window.innerWidth / window.innerHeight
+    camara.updateProjectionMatrix()
     renderer.render(scene, camara)
 }
 
