@@ -21,3 +21,14 @@ for (let x = -1; x <= 1; x++) {
 }
 
 sceneManager.cameraManager.camera.lookAt(cubos[4].position)
+
+sceneManager.addUpdatable({
+    /**
+     * EJERCICIO 1:
+     * Hacer que un cubo se mueva de arriba a abajo como si estuviera
+     * en un fluido
+     */
+    update(delta) {
+        
+    }
+})
