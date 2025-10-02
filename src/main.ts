@@ -6,7 +6,6 @@ const canvas = document.querySelector('canvas')!
 
 const sceneManager = SceneManager.getInstance(canvas)
 
-
 const cubos: Mesh[] = []
 // Crear 3x3 cubos en una cuadrícula horizontal
 for (let x = -1; x <= 1; x++) {
@@ -15,11 +14,22 @@ for (let x = -1; x <= 1; x++) {
             new BoxGeometry(),
             new MeshStandardMaterial()
         )
+        cubo.castShadow = true
+        cubo.receiveShadow = true
         cubo.position.set(x * 2, 0, z * 2) // Espaciado de 2 unidades
         cubos.push(cubo)
         sceneManager.scene.add(cubo)
     }
 }
+
+const suelo = new Mesh(
+    new BoxGeometry(10, 1, 10),
+    new MeshStandardMaterial()
+)
+suelo.receiveShadow = true
+suelo.position.setY(-1)
+
+sceneManager.scene.add(suelo)
 
 sceneManager.cameraManager.camera.lookAt(cubos[4].position)
 

@@ -1,4 +1,4 @@
-import { Clock, Scene } from "three";
+import { BasicShadowMap, Clock, PCFSoftShadowMap, Scene } from "three";
 import { WebGPURenderer } from "three/webgpu";
 import { LightManager } from "./LightManager";
 import { CameraManager } from "./CameraManager";
@@ -42,7 +42,11 @@ export class SceneManager {
         this.scene = new Scene()
         this.reloj = new Clock(true)
         this.updatables = []
-        this.renderer = new WebGPURenderer({ canvas: canvas, forceWebGL: true })
+        this.renderer = new WebGPURenderer({ canvas: canvas, forceWebGL: true, antialias: true })
+        this.renderer.shadowMap = {
+            enabled: true,
+            type: PCFSoftShadowMap
+        }
         this.renderer.setAnimationLoop(() => this.update())
 
         this.lightManager = new LightManager(this.scene)
