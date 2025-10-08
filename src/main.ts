@@ -1,6 +1,10 @@
-import { BoxGeometry, Color, Material, Mesh, MeshStandardMaterial, Raycaster, Vector2 } from 'three'
+import { BoxGeometry, Color, Mesh, MeshStandardMaterial, Raycaster, Vector2 } from 'three'
 import { SceneManager } from './SceneManager'
 import './style.css'
+import { resources, loadAllResources } from './resources'
+
+await loadAllResources()
+console.log(resources.models['casa'])
 
 const canvas = document.querySelector('canvas')!
 
@@ -12,7 +16,7 @@ for (let x = -1; x <= 1; x++) {
     for (let z = -1; z <= 1; z++) {
         const cubo = new Mesh(
             new BoxGeometry(),
-            new MeshStandardMaterial()
+            new MeshStandardMaterial() // PBR
         )
         cubo.castShadow = true
         cubo.receiveShadow = true
@@ -30,6 +34,22 @@ suelo.receiveShadow = true
 suelo.position.setY(-1)
 
 sceneManager.scene.add(suelo)
+
+resources.models['casa'].position.setY(-0.5)
+resources.models['casa'].traverse((obj) => {
+    obj.castShadow = true
+})
+
+const casa1 = resources.models['casa'].clone()
+const casa2 = resources.models['casa'].clone()
+
+sceneManager.scene.add(casa1)
+sceneManager.scene.add(casa2)
+
+casa1.position.setX(-6)
+casa2.position.setX(6)
+
+
 
 sceneManager.cameraManager.camera.lookAt(cubos[4].position)
 

@@ -1,4 +1,4 @@
-import { BasicShadowMap, Clock, PCFSoftShadowMap, Scene } from "three";
+import { Clock, PCFSoftShadowMap, Scene } from "three";
 import { WebGPURenderer } from "three/webgpu";
 import { LightManager } from "./LightManager";
 import { CameraManager } from "./CameraManager";
