@@ -14,6 +14,23 @@ export interface Updatable {
  *   Dos sabores:
  *     1. La clase inicializa todo (incluyendo el renderer)
  *     2. La clase recibe todo por constructor
+ * 
+ * BONUS: hemos implementado el "antipatrón" Singleton.
+ *  · Uno de los pocos usos justificados que encontraremos en El Mundo Real™
+ * 
+ *  · La idea es imposibilitar segundas instancias de recursos que pueden ser
+ *    especialmente problemáticos de limpiar.
+ * 
+ *  · Podemos paliar todos sus contras si nos aseguramos de evitar side-effects
+ *    y de no hardwirear todo la aplicación con esto.
+ * 
+ *  · No es un patrón necesario si conocemos bien otras técnicas como la inyección
+ *    de dependencias, aunque tampoco son mutuamente excluyentes: se puede usar
+ *    Singleton e inyectar su instancia, evitando hardwiring y que más tarde
+ *    se pueda eliminar el Singleton sin mucho problema.
+ * 
+ *  · El mayor problema de Singleton es la testabilidad, pero no es común testar lógica 
+ *    de renderizado. 
  */
 export class SceneManager {
     private static instance: SceneManager
