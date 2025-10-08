@@ -2,6 +2,7 @@ import { Clock, PCFSoftShadowMap, Scene } from "three";
 import { WebGPURenderer } from "three/webgpu";
 import { LightManager } from "./LightManager";
 import { CameraManager } from "./CameraManager";
+import { CSS2DRenderer, CSS3DRenderer } from "three/examples/jsm/Addons.js";
 
 
 export interface Updatable {
@@ -49,6 +50,7 @@ export class SceneManager {
 
     scene: Scene
     renderer: WebGPURenderer
+    css2dRenderer: CSS3DRenderer
     reloj: Clock
     cameraManager: CameraManager
     lightManager: LightManager
@@ -65,6 +67,8 @@ export class SceneManager {
             type: PCFSoftShadowMap
         }
         this.renderer.setAnimationLoop(() => this.update())
+        this.css2dRenderer = new CSS3DRenderer()
+        document.body.appendChild(this.css2dRenderer.domElement)
 
         this.lightManager = new LightManager(this.scene)
         this.cameraManager = new CameraManager(this.scene, canvas)
@@ -81,6 +85,7 @@ export class SceneManager {
     update() {
         const delta = this.reloj.getDelta()
         this.renderer.render(this.scene, this.cameraManager.camera)
+        this.css2dRenderer.render(this.scene, this.cameraManager.camera)
         
         for (const updatable of this.updatables) {
             updatable.update(delta)
@@ -89,8 +94,10 @@ export class SceneManager {
     
     onResize() {
         this.renderer.setSize(window.innerWidth, window.innerHeight)
+        this.css2dRenderer.setSize(window.innerWidth, window.innerHeight)
         this.cameraManager.camera.aspect = window.innerWidth / window.innerHeight
         this.cameraManager.camera.updateProjectionMatrix()
         this.renderer.render(this.scene, this.cameraManager.camera)
+        this.css2dRenderer.render(this.scene, this.cameraManager.camera)
     }
 }

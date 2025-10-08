@@ -1,7 +1,11 @@
-import { BoxGeometry, Color, Mesh, MeshStandardMaterial, Raycaster, Vector2 } from 'three'
+import { BoxGeometry, Color, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Raycaster, Vector2, Vector3 } from 'three'
 import { SceneManager } from './SceneManager'
 import './style.css'
-import { resources, loadAllResources } from './resources'
+import { resources, loadAllResources, getModelCopy } from './resources'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
+
+const stats = new Stats()
+document.body.appendChild(stats.dom)
 
 await loadAllResources()
 console.log(resources.models['casa'])
@@ -10,68 +14,39 @@ const canvas = document.querySelector('canvas')!
 
 const sceneManager = SceneManager.getInstance(canvas)
 
-const cubos: Mesh[] = []
-// Crear 3x3 cubos en una cuadrícula horizontal
-for (let x = -1; x <= 1; x++) {
-    for (let z = -1; z <= 1; z++) {
-        const cubo = new Mesh(
-            new BoxGeometry(),
-            new MeshStandardMaterial() // PBR
-        )
-        cubo.castShadow = true
-        cubo.receiveShadow = true
-        cubo.position.set(x * 2, 0, z * 2) // Espaciado de 2 unidades
-        cubos.push(cubo)
-        sceneManager.scene.add(cubo)
+
+const geometry = new BoxGeometry()
+const material = new MeshStandardMaterial()
+
+const cubos = new InstancedMesh(geometry, material, 9*9*9)
+const matrix = new Matrix4()
+let i = 0;
+// Necesario establecer al menos un color antes del primer render
+// para que Three.js cree el atributo en sí.
+cubos.setColorAt(0, new Color())
+for (let x = -4; x <= 4; x++) {
+    for (let y = -4; y <= 4; y++) {
+        for (let z = -4; z <= 4; z++, i++) {
+            matrix.identity()
+            matrix.scale(new Vector3(1 + Math.random(), 1  + Math.random(), 1 + Math.random()))
+            matrix.setPosition(x * 2, y * 2, z * 2)
+            cubos.setMatrixAt(i, matrix)
+        }
     }
 }
+sceneManager.scene.add(cubos)
 
 const suelo = new Mesh(
     new BoxGeometry(10, 1, 10),
     new MeshStandardMaterial()
 )
 suelo.receiveShadow = true
-suelo.position.setY(-1)
+suelo.position.setY(-9)
 
 sceneManager.scene.add(suelo)
-
-resources.models['casa'].position.setY(-0.5)
-resources.models['casa'].traverse((obj) => {
-    obj.castShadow = true
-})
-
-const casa1 = resources.models['casa'].clone()
-const casa2 = resources.models['casa'].clone()
-
-sceneManager.scene.add(casa1)
-sceneManager.scene.add(casa2)
-
-casa1.position.setX(-6)
-casa2.position.setX(6)
-
-
-
-sceneManager.cameraManager.camera.lookAt(cubos[4].position)
-
-const max = 3;
-let direccion = 1;
+sceneManager.cameraManager.camera.lookAt(cubos.position)
 
 const raycaster = new Raycaster()
-
-sceneManager.addUpdatable({
-    /**
-     * EJERCICIO 1:
-     * Hacer que un cubo se mueva de arriba a abajo como si estuviera
-     * en un fluido
-     */
-    update(delta) {
-        let time = Date.now() * 0.001;
-        const cubo = cubos[0]
-        cubo.position.y = Math.sin(time);
-        cubo.rotation.x += 0.001;
-        cubo.rotation.y += 0.001;
-    }
-})
 
 let mx = 0
 let my = 0
@@ -85,17 +60,15 @@ sceneManager.addUpdatable({
     update() {
         raycaster.setFromCamera(new Vector2(mx, my), sceneManager.cameraManager.camera)
 
-        const intersecciones = raycaster.intersectObjects(cubos)
+        const intersecciones = raycaster.intersectObjects([cubos])
 
         if (intersecciones.length > 0) {
-            const cubo = intersecciones[0].object as Mesh
-            (cubo.material as MeshStandardMaterial).color = new Color('red')
+            const instanceId = intersecciones[0].instanceId!
+            cubos.setColorAt(instanceId, new Color('red'))
+            cubos.instanceColor!.needsUpdate = true
+            console.log(instanceId)
         }
+
+        stats.update()
     }
-})
-
-
-
-window.addEventListener('click', () => {
-    (cubos[3].material as MeshStandardMaterial).color = new Color('red')
 })
