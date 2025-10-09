@@ -8,12 +8,13 @@ export class CameraManager {
 
     constructor(scene: Scene, canvas: HTMLCanvasElement) {
         this.camera = new PerspectiveCamera()
-        this.camera.position.setZ(8)
-        this.camera.position.setY(2)
+        this.camera.position.setZ(14)
+        this.camera.position.setY(10)
         scene.add(this.camera)
 
         this.orbitControls = new OrbitControls(this.camera, canvas)
         this.orbitControls.enableDamping = true
+        // this.orbitControls.autoRotate = true
     }
 
     update(delta: number) {

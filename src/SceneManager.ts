@@ -1,8 +1,9 @@
-import { Clock, PCFSoftShadowMap, Scene } from "three";
+import { Clock, PCFSoftShadowMap, Scene, Vector2, WebGLRenderer } from "three";
 import { WebGPURenderer } from "three/webgpu";
 import { LightManager } from "./LightManager";
 import { CameraManager } from "./CameraManager";
-import { CSS2DRenderer, CSS3DRenderer } from "three/examples/jsm/Addons.js";
+import { BloomPass, CSS2DRenderer, EffectComposer, OutputPass, RenderPass, SAOPass, SMAAPass, SSAOPass, UnrealBloomPass } from "three/examples/jsm/Addons.js";
+import { resources } from "./resources";
 
 
 export interface Updatable {
@@ -49,30 +50,44 @@ export class SceneManager {
     }
 
     scene: Scene
-    renderer: WebGPURenderer
-    css2dRenderer: CSS3DRenderer
+    renderer: WebGLRenderer
+    css2dRenderer: CSS2DRenderer
     reloj: Clock
     cameraManager: CameraManager
     lightManager: LightManager
 
+    private composer: EffectComposer
     private updatables: Updatable[]
 
     private constructor(canvas: HTMLCanvasElement) {
         this.scene = new Scene()
         this.reloj = new Clock(true)
         this.updatables = []
-        this.renderer = new WebGPURenderer({ canvas: canvas, forceWebGL: true, antialias: true })
-        this.renderer.shadowMap = {
-            enabled: true,
-            type: PCFSoftShadowMap
-        }
+        this.renderer = new WebGLRenderer({ canvas: canvas })
+        this.renderer.shadowMap.enabled = true
+
         this.renderer.setAnimationLoop(() => this.update())
-        this.css2dRenderer = new CSS3DRenderer()
+        this.css2dRenderer = new CSS2DRenderer()
         document.body.appendChild(this.css2dRenderer.domElement)
 
         this.lightManager = new LightManager(this.scene)
         this.cameraManager = new CameraManager(this.scene, canvas)
-        
+    
+        this.composer = new EffectComposer(this.renderer)
+        const renderPass = new RenderPass(this.scene, this.cameraManager.camera)
+        const sao = new SAOPass(this.scene, this.cameraManager.camera)
+        sao.params.saoIntensity = 0.0004
+        sao.params.saoKernelRadius = 5
+        // Anti-aliasing
+        const aa = new SMAAPass()
+        const bloomPass = new UnrealBloomPass(new Vector2(window.innerWidth, window.innerHeight), 1, 0.4, 0.55)
+        const outputPass = new OutputPass()
+        this.composer.addPass(renderPass)
+        // this.composer.addPass(bloomPass)
+        this.composer.addPass(sao)
+        this.composer.addPass(aa)
+        this.composer.addPass(outputPass)
+
         this.updatables.push(this.cameraManager)
         window.addEventListener('resize', () => this.onResize())
         this.onResize()
@@ -84,7 +99,8 @@ export class SceneManager {
 
     update() {
         const delta = this.reloj.getDelta()
-        this.renderer.render(this.scene, this.cameraManager.camera)
+        this.composer.render()
+        // this.renderer.render(this.scene, this.cameraManager.camera)
         this.css2dRenderer.render(this.scene, this.cameraManager.camera)
         
         for (const updatable of this.updatables) {
@@ -94,10 +110,11 @@ export class SceneManager {
     
     onResize() {
         this.renderer.setSize(window.innerWidth, window.innerHeight)
+        this.composer.setSize(window.innerWidth, window.innerHeight)
         this.css2dRenderer.setSize(window.innerWidth, window.innerHeight)
         this.cameraManager.camera.aspect = window.innerWidth / window.innerHeight
         this.cameraManager.camera.updateProjectionMatrix()
-        this.renderer.render(this.scene, this.cameraManager.camera)
+        this.composer.render()
         this.css2dRenderer.render(this.scene, this.cameraManager.camera)
     }
 }
